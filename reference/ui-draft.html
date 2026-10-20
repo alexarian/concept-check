@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Concept Check</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+:root{
+  --paper:#F4F6F8; --card:#FFFFFF; --ink:#16202A; --ink-soft:#55626E; --line:#D6DDE3;
+  --focus:#2F4FD8; --on-focus:#FFFFFF; --quote:#FFF1CC; --quote-ink:#6B4B00;
+  --found:#1E7A4C; --missing:#6B7480; --error:#B23A2C;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#10161C; --card:#18212A; --ink:#E6ECF2; --ink-soft:#A6B2BE; --line:#2A3642;
+  --focus:#8EA2FF; --on-focus:#10161C; --quote:#3A2E10; --quote-ink:#F2C86A;
+  --found:#5ACB92; --missing:#8C97A3; --error:#F08A7A; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --paper:#10161C; --card:#18212A; --ink:#E6ECF2; --ink-soft:#A6B2BE; --line:#2A3642;
+  --focus:#8EA2FF; --on-focus:#10161C; --quote:#3A2E10; --quote-ink:#F2C86A;
+  --found:#5ACB92; --missing:#8C97A3; --error:#F08A7A; color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.6 "Atkinson Hyperlegible",system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+button,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.mono{font:500 12px/1.4 "IBM Plex Mono",monospace;letter-spacing:.08em;text-transform:uppercase}
+
+.app{display:grid;grid-template-columns:272px minmax(0,1fr);height:100dvh}
+
+/* sidebar */
+.side{background:var(--card);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.side-top{padding:16px 14px 10px;display:grid;gap:12px}
+.wordmark{font:800 20px/1.2 Archivo,sans-serif;margin:0;letter-spacing:-.01em}
+.new{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--card);border-radius:8px;padding:9px 12px;font-weight:700;text-align:left}
+.new:hover{border-color:var(--ink-soft)}
+.side-label{color:var(--ink-soft);padding:12px 16px 6px;margin:0}
+.chats{list-style:none;margin:0;padding:0 8px 16px;overflow-y:auto;flex:1;min-height:0}
+.chats button{width:100%;text-align:left;border:0;background:transparent;border-radius:8px;padding:8px 10px;display:grid;gap:2px}
+.chats button:hover{background:var(--paper)}
+.chats button[aria-current="true"]{background:var(--paper);box-shadow:inset 3px 0 0 var(--focus)}
+.chats .t{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chats .m{font:500 11px "IBM Plex Mono",monospace;color:var(--ink-soft);letter-spacing:.04em}
+.chats .m .ok{color:var(--found)}
+.side-foot{border-top:1px solid var(--line);padding:10px 16px;font-size:13px;color:var(--ink-soft)}
+
+/* main */
+.main{display:flex;flex-direction:column;min-height:0;min-width:0}
+.topbar{display:none;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--card)}
+.menu{border:1px solid var(--line);background:var(--card);border-radius:8px;width:38px;height:38px;font-size:18px;line-height:1}
+.draft{font:500 11px/1.4 "IBM Plex Mono",monospace;letter-spacing:.06em;color:var(--quote-ink);background:var(--quote);text-align:center;padding:6px 12px}
+.scroll{flex:1;overflow-y:auto;min-height:0}
+.thread{max-width:760px;margin:0 auto;padding:28px 16px 24px;display:grid;gap:22px}
+
+.msg{display:grid;max-width:100%}
+/* the app's questions: right side, in a bubble */
+.msg.bot{justify-items:end}
+.bot .bubble{background:var(--card);border:1px solid var(--line);border-radius:18px 18px 4px 18px;padding:14px 18px;max-width:min(600px,88%);display:grid;gap:10px;min-width:0}
+.bot p{margin:0}
+/* the learner's answers: left side, plain text */
+.msg.me{justify-items:start}
+.me .answer{max-width:min(640px,92%);white-space:pre-wrap;overflow-wrap:anywhere;padding:2px 0}
+.case{font-size:20px;line-height:1.5;margin:0}
+.tag{color:var(--ink-soft);margin:0}
+.quote{margin:0;background:var(--quote);color:var(--quote-ink);border-left:4px solid var(--quote-ink);border-radius:0 8px 8px 0;padding:10px 14px;font-size:19px}
+.acts{display:flex;gap:16px;flex-wrap:wrap}
+.link{background:none;border:0;padding:0;color:var(--ink-soft);text-decoration:underline;text-underline-offset:3px;font-size:14px}
+.link:disabled{opacity:.5;cursor:default;text-decoration:none}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:9999px;padding:7px 14px;font-size:15px;text-align:left}
+.chip:hover:not(:disabled){border-color:var(--focus)}
+.chip:disabled{opacity:.45;cursor:default}
+.chip small{font:500 11px "IBM Plex Mono",monospace;color:var(--ink-soft);margin-left:6px}
+.badge{justify-self:start;border-radius:9999px;padding:3px 12px}
+.badge.found{color:var(--found);border:1px solid var(--found)}
+.badge.notyet{color:var(--missing);border:1px solid var(--missing)}
+.rows{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.rows li{display:grid;grid-template-columns:20px 1fr;gap:8px}
+.tick{font-weight:700} .tick.y{color:var(--found)} .tick.n{color:var(--missing)}
+.rows .q{display:block;margin-top:6px;background:var(--quote);color:var(--quote-ink);border-left:3px solid var(--quote-ink);border-radius:0 6px 6px 0;padding:5px 10px;font-size:15px}
+.typing{color:var(--ink-soft);font-style:italic}
+
+/* welcome */
+.welcome{display:grid;gap:18px;padding-top:8vh;text-align:center;justify-items:center}
+.welcome h1{font:800 28px/1.2 Archivo,sans-serif;margin:0;letter-spacing:-.01em}
+.welcome p{margin:0;color:var(--ink-soft);max-width:520px}
+.welcome .chips{justify-content:center;max-width:640px}
+
+/* composer */
+.composer-wrap{padding:8px 16px 16px;background:linear-gradient(transparent,var(--paper) 30%)}
+.composer{max-width:760px;margin:0 auto;display:grid;gap:8px}
+.box{display:flex;align-items:flex-end;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px 8px 8px 16px}
+.box:focus-within{border-color:var(--focus);box-shadow:0 0 0 1px var(--focus)}
+.box textarea{flex:1;border:0;background:transparent;resize:none;max-height:200px;min-height:28px;padding:6px 0;line-height:1.5;outline:none}
+.send{width:38px;height:38px;border-radius:10px;border:0;background:var(--focus);color:var(--on-focus);font-size:18px;font-weight:700;flex:none}
+.send:disabled{opacity:.4;cursor:default}
+.under{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--ink-soft)}
+.consent{display:flex;gap:8px;align-items:center;cursor:pointer}
+.consent input{width:16px;height:16px;margin:0;accent-color:var(--focus)}
+.err{color:var(--error)}
+.ended{max-width:760px;margin:0 auto;text-align:center;color:var(--ink-soft);font-size:14px;padding:6px 0}
+
+.scrim{display:none}
+@media (max-width:820px){
+  .app{grid-template-columns:1fr}
+  .side{position:fixed;inset:0 auto 0 0;width:min(300px,86vw);z-index:30;transform:translateX(-100%);transition:transform .2s}
+  .app.open .side{transform:none}
+  .app.open .scrim{display:block;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:20}
+  .topbar{display:flex}
+}
+@media (prefers-reduced-motion:reduce){.side{transition:none}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <aside class="side" aria-label="Your checks">
+    <div class="side-top">
+      <p class="wordmark">Concept Check</p>
+      <button class="new" id="newBtn" type="button"><span aria-hidden="true">+</span> New check</button>
+    </div>
+    <p class="side-label mono">Previous checks</p>
+    <ul class="chats" id="chats"></ul>
+    <div class="side-foot">Saved on this device, without your name.</div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <main class="main">
+    <div class="topbar">
+      <button class="menu" id="menuBtn" type="button" aria-label="Open previous checks">&#9776;</button>
+      <span class="wordmark" style="font-size:17px">Concept Check</span>
+    </div>
+    <div class="draft">DRAFT · AI IS SIMULATED · case A always misses, retry 1 always passes</div>
+    <div class="scroll" id="scroll"><div class="thread" id="thread"></div></div>
+    <div class="composer-wrap">
+      <div id="ended" class="ended" hidden></div>
+      <form class="composer" id="composer">
+        <div class="box">
+          <textarea id="input" rows="1" placeholder="Type your answer…" aria-label="Your answer"></textarea>
+          <button class="send" id="send" type="submit" aria-label="Send" disabled>&#8593;</button>
+        </div>
+        <div class="under">
+          <label class="consent" id="consentRow"><input type="checkbox" id="consent"> I agree my answers are saved, without my name.</label>
+          <span id="hint">Enter to send · Shift+Enter for a new line</span>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+
+<script>
+const TOPICS = ["What is an interface","PRD to UI to frontend","API as the second interface","Building APIs and backend","Databases and domain modelling","Connect backend to database","End to end MVP and deploy"];
+const T5 = {
+  explain: "Why does the app forget without storage, and how do you decide what to store?",
+  caseA: "In a music app, a song sits at position 3 in one playlist and position 8 in another. Where does “position” go?",
+  followUp: "If you add position to the song’s own row, what happens when that song is in two playlists at once?",
+  caseB: "In a library app, one member borrows many books over time and one book is borrowed by many members. How do you store borrowing?",
+  keyB: ["Stores borrowing in a separate table where each row pairs one member with one book",
+         "Explains why: both sides are many, so neither the member nor the book row can hold the pointer without a list"]
+};
+const SAMPLE = [
+  { id:"s1", topic:4, status:"closed", date:"18 Oct", step:"done", msgs:[
+    {r:"bot", k:"text", t:"Explain this in your own words. Don’t define it, work it out.\n\n**" + T5.explain + "**"},
+    {r:"me", k:"text", t:"The app needs a database to remember things. Otherwise it is stateless."},
+    {r:"bot", k:"case", t:"A tiffin customer uploads a photo of a bad meal. Where does the photo go?", n:"A new case"},
+    {r:"me", k:"text", t:"In the database, in the orders table."},
+    {r:"bot", k:"follow", said:"Otherwise it is stateless.", t:"If a thousand customers each upload a photo into a table cell, what does a row turn into?"},
+    {r:"me", k:"text", t:"A huge row with an image in it. That's not a fact, that's a file."},
+    {r:"bot", k:"case", t:"Your app lets users upload a screenshot. The agent's plan saves the image inside a text column. Approve?", n:"A different case · try 1 of 3"},
+    {r:"me", k:"text", t:"Reject. The image goes to file storage and the row only keeps the link, who sent it and when."},
+    {r:"bot", k:"result", ok:true, used:1, rows:[[true,"Says reject: the image goes to file storage","Reject. The image goes to file storage"],[true,"Explains that the row keeps only facts about the image, such as its link, who sent it and when","the row only keeps the link, who sent it and when"]]}
+  ]},
+  { id:"s2", topic:5, status:"notyet", date:"19 Oct", step:"done", msgs:[
+    {r:"bot", k:"text", t:"Explain this in your own words. Don’t define it, work it out.\n\n**What has to happen for data to survive a refresh, and where does the key live?**"},
+    {r:"me", k:"text", t:"You connect Supabase and keep the key safe for security reasons."},
+    {r:"bot", k:"case", t:"Row Level Security isn't switched on yet. Can the publishable key go in the page?", n:"A new case"},
+    {r:"me", k:"text", t:"Yes, it's the publishable one so it's fine."},
+    {r:"bot", k:"follow", said:"keep the key safe for security reasons.", t:"With no rules on which rows a key can reach, what can anyone who copies it from the page do?"},
+    {r:"me", k:"text", t:"Not sure."},
+    {r:"bot", k:"text", t:"… 3 retries later …"},
+    {r:"bot", k:"result", ok:false, used:3, rows:[[true,"Says not yet","Not yet I think"],[false,"Explains that the publishable key is only safe in the page once Row Level Security limits which rows each user can reach",""]]}
+  ]}
+];
+
+// ---------- storage (per device; safe if blocked) ----------
+const KEY = "cc-draft-chats";
+function load(){ try { const v = JSON.parse(localStorage.getItem(KEY) || "null"); return Array.isArray(v) ? v : null; } catch(e){ return null; } }
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(chats.filter(c => !c.id.startsWith("s")))); } catch(e){} }
+let chats = [...(load() || []), ...SAMPLE];
+let current = null;   // chat object, or null for the welcome screen
+let busy = false;
+
+const $ = id => document.getElementById(id);
+const thread = $("thread"), scroll = $("scroll"), input = $("input"), send = $("send");
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function md(s){ return esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/\n\n/g,"</p><p>"); }
+function lastSentence(t){ const p = t.split(/(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean); return p.length ? p[p.length-1] : t.trim(); }
+
+// ---------- sidebar ----------
+function renderSide(){
+  $("chats").innerHTML = chats.map(c => `<li><button type="button" data-id="${c.id}" aria-current="${current && current.id===c.id}">
+    <span class="t">${esc(TOPICS[c.topic])}</span>
+    <span class="m">${c.date} · ${c.status==="closed"?'<span class="ok">GAP CLOSED</span>':c.status==="notyet"?"NOT YET":"IN PROGRESS"}</span></button></li>`).join("");
+  $("chats").querySelectorAll("button").forEach(b => b.onclick = () => { open(chats.find(c => c.id === b.dataset.id)); closeSide(); });
+}
+function closeSide(){ $("app").classList.remove("open"); }
+$("menuBtn").onclick = () => $("app").classList.add("open");
+$("scrim").onclick = closeSide;
+$("newBtn").onclick = () => { current = null; render(); closeSide(); input.focus(); };
+
+// ---------- messages ----------
+function msgHTML(m, live){
+  if (m.r === "me") return `<div class="msg me"><div class="answer">${esc(m.t)}</div></div>`;
+  let b = "";
+  if (m.k === "text") b = `<p>${md(m.t)}</p>`;
+  if (m.k === "case") b = `<p class="tag mono">${m.n}</p><p class="case">${esc(m.t)}</p>` +
+    (m.flags ? `<div class="acts"><button class="link" data-flag="unclear" ${live?"":"disabled"}>This question is unclear</button><button class="link" data-flag="not_taught" ${live?"":"disabled"}>I wasn’t taught this</button></div>` : "");
+  if (m.k === "follow") b = (m.said ? `<p>You said:</p><blockquote class="quote">“${esc(m.said)}”</blockquote>` : "") +
+    `<p>One question:</p><p class="case">${esc(m.t)}</p>`;
+  if (m.k === "result") b = `<span class="badge mono ${m.ok?"found":"notyet"}">${m.ok?"Gap closed":"Not yet"}</span>
+    <p>${m.ok ? "You missed the first case, then got a different one in your own words." : "The last case is still missing a point. Here’s what was found."}</p>
+    <p class="tag">Retries used: ${m.used} of 3</p>
+    <ul class="rows">${m.rows.map(([y,pt,q]) => `<li><span class="tick ${y?"y":"n"}">${y?"✓":"✗"}</span><span>${esc(pt)}${q?`<span class="q">“${esc(q)}”</span>`:""}</span></li>`).join("")}</ul>`;
+  if (m.k === "typing") b = `<p class="typing">${m.t}</p>`;
+  return `<div class="msg bot"><div class="bubble">${b}</div></div>`;
+}
+function render(){
+  renderSide();
+  if (!current){
+    thread.innerHTML = `<div class="welcome">
+      <h1>Which Module 2 idea do you want to check?</h1>
+      <p>Explain it in your own words. We’ll find where it turns into a stock phrase, ask you one question, and give you a new case to try.</p>
+      <div class="chips">${TOPICS.map((t,i)=>`<button type="button" class="chip" data-t="${i}" ${i===4?"":"disabled"}>${i+1}. ${t}${i===4?"":"<small>draft: topic 5 only</small>"}</button>`).join("")}</div>
+    </div>`;
+    thread.querySelectorAll(".chip").forEach(b => b.onclick = () => startChat(+b.dataset.t));
+    $("composer").hidden = false; $("ended").hidden = true; $("consentRow").hidden = false;
+    input.placeholder = "Pick a topic above to start"; input.disabled = true; send.disabled = true;
+    return;
+  }
+  const live = current.step !== "done";
+  thread.innerHTML = current.msgs.map((m,i) => msgHTML(m, live && i === current.msgs.length - 1)).join("");
+  thread.querySelectorAll("[data-flag]").forEach(b => b.onclick = () => flag(b.dataset.flag));
+  $("consentRow").hidden = true;
+  if (live){
+    $("composer").hidden = false; $("ended").hidden = true;
+    input.disabled = busy; input.placeholder = current.step === "follow" ? "Your thinking (or type “skip”)" : "Type your answer…";
+    syncSend();
+  } else {
+    $("composer").hidden = true; $("ended").hidden = false;
+    $("ended").textContent = "This check is finished. Start a new check from the sidebar.";
+  }
+  scroll.scrollTop = scroll.scrollHeight;
+}
+function open(c){ current = c; busy = false; render(); }
+function push(m){ current.msgs.push(m); save(); render(); }
+function botAfter(text, ms, fn){
+  busy = true; push({r:"bot", k:"typing", t:text});
+  setTimeout(() => { current.msgs.pop(); busy = false; fn(); input.focus(); }, ms);
+}
+
+// ---------- the flow (simulated) ----------
+function startChat(t){
+  if (!$("consent").checked){ $("hint").innerHTML = '<span class="err">Tick the box below first, so your answers can be saved.</span>'; return; }
+  $("hint").textContent = "Enter to send · Shift+Enter for a new line";
+  const d = new Date();
+  current = { id:"c"+d.getTime(), topic:t, status:"progress", step:"explain", date:d.toLocaleDateString("en-GB",{day:"numeric",month:"short"}), msgs:[] };
+  chats.unshift(current);
+  push({r:"bot", k:"text", t:"Explain this in your own words. Don’t define it, work it out.\n\n**" + T5.explain + "**"});
+}
+function flag(){
+  current.msgs[current.msgs.length-1].flags = false;
+  push({r:"bot", k:"text", t:"Thanks, that’s logged so the case can be fixed. It doesn’t count against you. (In the real app a different case appears here.)"});
+  push({r:"bot", k:"case", t:T5.caseA, n:"A new case", flags:true});
+}
+function answer(text){
+  const step = current.step;
+  push({r:"me", k:"text", t:text});
+  if (step === "explain"){
+    current.explain = text; current.step = "caseA";
+    botAfter("Saving your explanation…", 700, () => push({r:"bot", k:"case", t:T5.caseA, n:"A new case", flags:true}));
+  } else if (step === "caseA"){
+    current.a = text; current.step = "follow";
+    botAfter("Reading your answer…", 1100, () => push({r:"bot", k:"follow", said:lastSentence(text), t:T5.followUp}));
+  } else if (step === "follow"){
+    current.step = "retry";
+    botAfter("One moment…", 600, () => push({r:"bot", k:"case", t:T5.caseB, n:"A different case · try 1 of 3"}));
+  } else if (step === "retry"){
+    const s = text.split(/(?<=[.!?])\s+/).filter(Boolean);
+    botAfter("Reading your answer…", 1100, () => {
+      current.step = "done"; current.status = "closed";
+      push({r:"bot", k:"result", ok:true, used:1, rows:[[true,T5.keyB[0],s[0]||text],[true,T5.keyB[1],s[1]||s[0]||text]]});
+    });
+  }
+}
+
+// ---------- composer ----------
+function syncSend(){ send.disabled = busy || input.disabled || !input.value.trim(); }
+function grow(){ input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, 200) + "px"; }
+input.addEventListener("input", () => { grow(); syncSend(); });
+input.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); $("composer").requestSubmit(); } });
+$("composer").addEventListener("submit", e => {
+  e.preventDefault();
+  const v = input.value.trim();
+  if (!v || busy || !current) return;
+  input.value = ""; grow(); answer(v);
+});
+render();
+</script>
+</body>
+</html>

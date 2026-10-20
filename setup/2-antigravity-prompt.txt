@@ -1,0 +1,85 @@
+STACK
+Use Next.js with API routes for the server, so it deploys to Vercel with no extra setup. Use the official Supabase JS client on the server only. Keep it to as few files as possible.
+
+Build a web app called Concept Check. Follow these rules exactly. Do not add features, pages or tables I didn't ask for.
+
+WHAT IT IS
+A private chat that checks whether a learner can use a Module 2 idea on a case they haven't seen. The app asks; the learner answers. The learner never chats freely with the AI.
+
+LOOK
+Follow DESIGN.md in the project root for colours, fonts, sizes and components. Match the layout of reference/ui-draft.html (look only; don't copy its fake logic or its browser storage of chats).
+
+LAYOUT (like the Claude chat app)
+- Left sidebar, 272px: "Concept Check" wordmark, a "+ New check" button, a "PREVIOUS CHECKS" list, and a footer line "Saved on this device, without your name." Each list row shows the topic title, then the date and status: GAP CLOSED, NOT YET, NO GAP or IN PROGRESS.
+- Under 820px wide, the sidebar becomes a drawer opened by a ☰ button in a top bar.
+- Main area: one chat thread, centred, max 760px wide, scrolling. A message box is pinned to the bottom.
+- Every message from the app (prompts, cases, follow-ups, results) appears on the RIGHT inside a rounded bubble: white, 1px border, 18px corners with the bottom-right corner 4px.
+- Every answer from the learner appears on the LEFT as plain text, no bubble, shown exactly as typed.
+- Message box: auto-growing text box and a round send button. Enter sends, Shift+Enter adds a new line. Send is disabled while the box is empty or while the app is working.
+- While the server works, show a short italic line on the right: "Reading your answer…" or "Finding your sentence…". No spinners, no avatars, no typing dots.
+
+NEW CHECK SCREEN
+- Centred heading "Which Module 2 idea do you want to check?", one line: "Explain it in your own words. We'll find where it turns into a stock phrase, ask you one question, and give you a new case to try." Then the 7 topics from the topics table as pill buttons, numbered, in id order.
+- If this device has not consented yet, show a checkbox under the message box: "I agree my answers are saved, without my name." If a topic is tapped before it's ticked, show a small error under the box: "Tick the box below first, so your answers can be saved." and do nothing else.
+- The message box is disabled until a topic is picked.
+
+THE FLOW (one check = one chat)
+1. App message: "Explain this in your own words. Don't define it, work it out." followed by the topic's explain_question in bold. The learner answers. Nothing is judged here.
+2. App message: label "A NEW CASE" and a case from this topic that this learner has never had. Under it, two small links: "This question is unclear" and "I wasn't taught this". The learner answers. Run AI JOB 2; code decides pass.
+   - PASS: app says "You've got this one. Here's another." and gives another unseen case the same way. After 3 passes in a row: "No gap found on this topic. Try another?" and the check ends with status no_gap.
+   - FAIL: go to step 3.
+   - If a link is tapped (before answering): save the flag, reply "Thanks, that's logged so the case can be fixed. It doesn't count against you." and give a different unseen case.
+3. Run AI JOB 1 on the explanation plus the answer that just failed. App message: "You said:" with the recited sentence in a highlighted quote block (leave out both if recited_sentence is empty), then "One question:" and the follow-up. Change the message box placeholder to: Your thinking (or type "skip"). Save whatever the learner sends as the reply.
+4. App message: label "A DIFFERENT CASE · TRY N OF 3" (N = 1, 2 or 3) and an unseen case from the same topic. The learner answers. Run AI JOB 2.
+   - PASS: go to step 5 with "Gap closed".
+   - FAIL and N is less than 3: run AI JOB 1 on this failed answer, show a new follow-up (step 3), then retry N+1.
+   - FAIL and N is 3: go to step 5 with "Not yet".
+   - If no unseen cases are left in the topic at any point: "You've seen every case here. Try another topic." and end the check.
+5. Result message: a badge "GAP CLOSED" (green) or "NOT YET" (grey, never red). One line: "You missed the first case, then got a different one in your own words." or "The last case is still missing a point. Here's what was found." Then "Retries used: N of 3". Then each key point of the last case answered, with ✓ and the learner's quoted words, or ✗.
+6. When a check ends, hide the message box and show: "This check is finished. Start a new check from the sidebar."
+
+RULES
+- Everything the learner types is the answer to the current step. Never send it to the AI as a question, and never reply to it conversationally.
+- No multiple choice. No hint button. No "ask AI". No answers or right/wrong shown before the result message.
+- Never say "wrong" or "incorrect". Never explain the concept.
+- Show the learner's words exactly as typed, everywhere.
+
+PREVIOUS CHECKS
+- When a device first consents, the server creates a learners row (label "Learner " + its id, consent true) and returns the id. The browser keeps that id so the same device is recognised next time. No names, emails or logins.
+- The sidebar lists this learner's gaps rows, newest first. Clicking one rebuilds the whole conversation from the database (the explanation, each case and answer, each follow-up and reply, flags, and the result) and shows it. Finished checks are read-only.
+- If the page is refreshed during a check, reopen that check at the step where it stopped.
+
+SERVER (all AI and database calls happen here, never in the browser)
+- Read these from environment variables: GROQ_API_KEY, GROQ_MODEL, SUPABASE_URL, SUPABASE_SERVICE_KEY. Never put a key in frontend code or in the repo.
+- The browser only calls my own server's routes.
+- If Groq fails, times out or returns invalid JSON: show "That didn't go through. Your answer is safe. Try again." with a Try again button. Keep the learner's typed answer. Never save a pass.
+
+AI JOB 1 (after each failed case, up to 3 times): send Groq these instructions plus the learner's explanation and the answer that just failed:
+"Find the one sentence in the learner's words where they stop reasoning and start repeating a stock phrase. Quote it exactly. Then write ONE question asking what would break or go wrong. Never give the answer, never define terms, never hint. Reply as JSON: {"recited_sentence": "...", "follow_up": "..."}. If there's no such sentence, recited_sentence is empty."
+
+AI JOB 2 (after every case answer): send Groq these instructions plus the case's key points (with their ids) and the learner's answer:
+"For each key point, reply found true or false, and quote the learner's exact words that show it. If you can't quote their words, found is false. Count a key point only if the learner's own words express that idea. Any wording that means the same thing counts. Naming a term or repeating a slogan without saying why does not count. Don't judge anything else. Reply as JSON: {"ticks": [{"key_point_id": 1, "found": true, "quote": "..."}]}"
+
+The AI never decides pass or fail. CODE decides: pass only if every key point of the case is found AND has a non-empty quote. If the reply isn't valid JSON, treat every point as not found and show the Try again message.
+
+DATABASE (Supabase. The tables already exist and already hold the topics, cases and key points. Do not create, drop or change any table.)
+- learners(id, label, consent, created_at)
+- topics(id, title, explain_question)
+- cases(id, topic_id, code, question)
+- key_points(id, case_id, point)
+- gaps(id, learner_id, topic_id, explanation, recited_sentence, follow_up, status, created_at). status is in_progress, closed, not_yet or no_gap.
+- tries(id, gap_id, case_id, stage, attempt, said, passed, recited_sentence, follow_up, follow_up_reply, created_at)
+- ticks(id, try_id, key_point_id, found, quote)
+- case_flags(id, case_id, learner_id, reason, created_at). reason is unclear or not_taught.
+
+WRITES
+- Topic picked: insert gaps (learner_id, topic_id, status in_progress).
+- Explain answered: save explanation on that gaps row.
+- Every case answer: insert tries (gap_id, case_id, said, passed, stage "before" and attempt 0 for case A, stage "after" and attempt 1 to 3 for retries) and one ticks row per key point (try_id, key_point_id, found, quote).
+- After AI JOB 1: save recited_sentence and follow_up on the failed tries row. Save the learner's reply as follow_up_reply on that same row. For the first follow-up of a check, also save recited_sentence and follow_up on the gaps row.
+- Flag tapped: insert case_flags (case_id, learner_id, reason).
+- Check ends: set gaps.status to closed, not_yet or no_gap.
+- Never give a learner a case they already have a tries row or a case_flags row for.
+
+DONE MEANS
+I can run a full check on my laptop: consent, pick a topic, explain, fail case A, see my own sentence quoted, answer the follow-up, pass a retry, and see the result. Then I refresh, and the check is still in the sidebar with every message. The Network tab shows no keys.
